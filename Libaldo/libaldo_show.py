@@ -133,10 +133,6 @@ def diffsymbols(*args):
         kres+=sname
     return (kname)
     
-            
-            
-        
-                
-    
-        
+def Lshow(ksym):
+    sE([ksym])
     

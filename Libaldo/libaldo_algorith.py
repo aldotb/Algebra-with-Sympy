@@ -154,8 +154,104 @@ def clear_exp_QQ(ksym1,ksym2,vmain=k,var2=t):
             
         return  (p1,p2) 
 
+ 
+def getexponent(ksym): # return only exponente , not sqrt  
+  
+    kres=ksym
+    ssym=str(ksym)
+    if 'sqrt' in ssym:
+        if 'sqrt'==ssym[0:4]:
+            nssym=between_par(ssym,'sqrt')
+            kres=parse_expr(nssym)
+    if Is_Pow(kres):
+        mm=fpoly(kres,'list')
+        return mm[1]
+    else:
+        return 1
+        
+def getexpo(ksym):
+    return getexponent(ksym) 
+
+    
+def getbase(ksym):  # return base from Pow monomie expresion
+    '''
+        input: x**a
+        return : x  
+    '''
+    ksym=ksym*1
+    if Is_Pow(ksym):
+        kres=ksym
+        ssym=str(ksym)
+        if 'sqrt' in ssym:
+            if 'sqrt'==ssym[0:4]:
+                nssym=between_par(ssym,'sqrt')
+                kres=parse_expr(nssym)
+                return getbase(kres)
+         
+        mm=fpoly(ksym,'list')
+        return mm[0]
+         
+            
+    else:
+        return ksym
+
+def partPow(ksym): # if ksym = sqrt(x**3) x,3,2 ,  if ksym= x**3, return x,3,1 ,if is x ret x,1,1
+    ksym=ksym*1
+    b1=getbase(ksym)
+    r1=1
+    ssym=str(ksym)
+    if 'sqrt' in ssym:
+        if 'sqrt'==ssym[0:4]:
+            r1=2
+        
      
+    e1=getexpo(ksym)
+
+    return b1,e1,r1       
+
+def sqrt2pow(ksym): # convert sqrt(x**y) in x**(y/2)
+    
+    b1,e1,r1=partPow(ksym)
+    return kpow(b1,cfrac(e1,r1))
+    
+def root2pow(ksym): # convert sqrt(x**y) in x**(y/2)
+    
+    b1,e1,r1=partPow(ksym)
+    return kpow(b1,cfrac(e1,r1))    
+    
+def pow2sqrt(ksym): # convert (x**(y/2)) in sqrt(x**y)
+    b1,e1,r1=partPow(ksym)
+    if r1==2:
+        return sqrt(kpow(b1,e1))
+    else:
+        return ksym
+
+    
+    b1,e1,r1=partPow(ksym)
+    return kpow(e1,cfrac(e1,1)) 
+
+def simplifyroot(ksym):
      
+    ksym=1*ksym 
+    if Is_Pow(ksym):
+         
+        kres= root2pow(ksym)
+        return kres
+        
+    elif Is_Add(ksym):
+        kres=0
+        for i in fpoly(ksym,'list'):
+            kres+=simplifyroot(i)
+        return kres
+    elif Is_Mul(ksym):
+        kres=1
+        for i in fpoly(ksym,'list'):
+            kres=kres*simplifyroot(i)
+        return kres
+    else:
+        return ksym
+
+    
 #####################################
 #             MyEqEq 
 ##################################### 
@@ -227,11 +323,97 @@ def between_func(ksym,sfunc):
         svar=svar[posx+1::]
     return vecf 
 
+def fix_str_math_space(ssym):
+    ''' 
+        input:'3*x*(y+1)'
+        return 3*x*(y + 1)'
+    '''
+    
+    kres=''
+    cc=0
+    for i in ssym:
+        if cc==0:
+            kres=kres+i
+        else:
+            if i=='+' or i=='-':
+                 
+                if ssym[cc-1]!=' ':
+                    kres+=' '
+                kres+=i
+                if ssym[cc+1]!=' ':
+                    kres+=' '
+            else:
+                kres+=i
+        cc+=1
+    return kres
+
+def sgetmonofactor(ksym,s1,op=''):
+    ''' 
+       return valid math expresion when convert math expr in str(expr)
+       example:
+            A=x*y*(1+a)*sqrt(z+1)+20*z
+            sgetmonofactor(A,'x*y') return  'x*y*(1 + a)'
+            sgetmonofactor(A,'x*y','f') return  'x*y*(1 + a)*sqrt(z + 1)'
+    '''
+    
+    if type(ksym)!=str:
+        smm=str(ksym)
+    else:
+        smm=ksym
+    smm=fix_str_math_space(smm) 
+    done=True
+    pstar=False
+    if type(op)==int:
+        nsmm=smm[op::]
+        p1=nsmm.find(s1)
+        if p1==-1:
+            return ksym
+        p1=p1+op
+    else:    
+        p1=smm.find(s1)
+    if p1==-1:
+        return ksym
+    sres=s1
+    qq=len(s1)
+    cc=0
+    i=p1+qq
+    while done:
+        vf=smm[i]
+        sres+=vf
+        if vf=='(':
+            cc+=1
+            pstar=True
+        if vf==')':
+            cc+=-1
+        if pstar and cc==0:
+            done=False
+
+        i+=1
+    if op!='' and type(op)==str:
+        if smm[i+1]!='':
+            sres=sgetmonofactor(ksym,sres)
+        
+    return sres 
 #####################################
 #     polynomie Tools
 #####################################
 
-
+def getmonoexpr(ksym,sval,op=''):
+    ''' 
+       return valid math expresion that include sval expr
+       example:
+            A=x*y*(1+a)*sqrt(z+1)+20*z
+            getmonoexpr(A,'x*y') return  x*y*(1 + a)
+            getmonoexpr(A,'x*y','f') return  x*y*(1+a)*sqrt(z+1)
+    '''
+    skres=sgetmonofactor(ksym,sval,op=op)
+    try:
+        kres=parse_expr(skres)
+        return kres
+    except:
+        return ksym
+        
+        
 #   squaresum()
 #   -----------
 def squaresum(ksym,p1=0,p2=0):
@@ -252,6 +434,7 @@ def squaresum(ksym,p1=0,p2=0):
     vec2=ksym-vec1
     kres=kpow((p1+p2),2)+vec2
     return kres
+
 
 def parcial_fraction(x,L,a,b,c,d):
     r'''
@@ -354,7 +537,8 @@ def coef_list(ksym,var2=x):  # return coef list complete according max degree
 
         '''
  
-         
+        if str(var2) not in str(ksym):
+            return [ksym] 
         dd=degree(ksym,gen=var2)
         vcoef=[]
         for i in range(1,dd+1):
@@ -370,6 +554,8 @@ def sortdegree(ksym,var2=x):
     '''
       group polynomies respect main varible
     '''
+    if str(var2) not in str(ksym):
+        return ksym
     mm=coef_list(ksym,var2)
     kres=0
     qq=len(mm)
@@ -482,6 +668,70 @@ def findFunc(f1,vecf,vecv):
 
     
     return y    
+
+
+
+
+#####################################
+#           monomies tools
+#####################################
+
+def baselist(ksym): # return list of all monomies in Monomie in Mul expr
+    '''
+        input (x+a)**a*(y-2)**b*z**c
+        return [(x+a),(y-2),z]
+    '''    
+    if Is_Mul(ksym):
+        mm=fpoly(ksym,'list')
+        vres=[]
+        for i in mm:
+            if Is_Pow(i):
+                vres.append(getbase(i))
+            else:
+                vres.append(i)
+        return vres        
+    else:
+        return ksym
+def expolist(ksym): # return list of each exponents  in Monomie from Mul expr
+    '''
+        input (x+a)**a*(y-2)**b*z**c
+        return [(a,b,c]
+    ''' 
+    if Is_Mul(ksym):
+        mm=fpoly(ksym,'list')
+        vres=[]
+        for i in mm:
+            if Is_Pow(i):
+                vres.append(getexponent(i))
+            else:
+                vres.append(1)
+        return vres        
+    else:
+        return ksym
+
+
+def partialfraction(*args): # Return divition monimies in partial fraction 
+    vecV=[]
+    separate=False
+    sfactor=False
+    eksym=args[0]
+    ksym=1*eksym
+    vecV=args[1::]
+    
+    pdeno=denom(ksym)
+    bl=baselist(pdeno)
+    el=expolist(pdeno)
+    es=sumitem(el)
+    cc=0
+    kres=0
+    vres=[]
+    for i,j in zip(bl,el):
+        for k in range(j):
+            kres=kres+vecV[cc]/i**(k+1)
+             
+            vres.append(vecV[cc]/i**(k+1))
+            cc+=1
+    return kres
     
 #####################################
 #           polynomies tools
@@ -768,6 +1018,33 @@ def get_seudocofactor(e2,e3,var2):
         vecfvar.append(vecvar[i])
         cc+=1
     return (vres,vecfvar)
+    
+# ---------  transformada 
+   
+def transformada(Q1,expr0,ssym,kope=''): 
+    '''
+    # return Q1 in format expr0 ,
+    example:
+         we want transform 2*x-y to 2(x+y) -3*y ,
+        Q1= 2*x-y
+        expr0= 'A+2(x+y)'
+        ssym ='A'
+        kope = 'e', help to simplify ..
+        
+        transformada(Q1,expr0,ssym,kope='e') return 2(x+y) -3*y
+    '''
+    S=symbols(ssym)
+    
+    expr0=expr0.replace(ssym,str(S))
+    expr1=parse_expr(expr0)
+    expr2=Q1-expr1
+    
+    if kope!='':
+        for i in kope:
+            expr2=opemat(expr2,i)
+    kres=csolve(expr2,S)        
+    expr3=expr1.subs(S,kres)
+    return expr3    
         
 #####################################
 #           geometry tools
@@ -840,13 +1117,83 @@ def solver(*args):
             
         
     return kres   
+#####################################
+#           vectores
+#####################################
 
+def checvec(vv,qq): # if vv=symbol o number  then return  [vv,vv,vv.... ] qq times ,is not ret vv
+    if type(vv)!=list:
+        return mzero(qq,vv)
+    else:
+        return vv
+        
+def klen(ksym): # if type(ksym)=list then return len(ksym) if not return 1
+    if type(ksym)!=list:
+        return 1
+    else:
+        return len(ksym)
+        
+def addvec(v1,v2): # input v1=[a,b],,v2=[c,d]  return [a+c,b+d], v1=[a,b],,v2=3 return [a+3,b+3]
+    v1=checvec(v1,klen(v2))
+    v2=checvec(v2,klen(v1))
+ 
+    kres=[]
+    for i,j in zip(v1,v2):
+        kres.append(i+j)
+    return kres
+
+def restvec(v1,v2):  # input v1=[a,b],,v2=[c,d]  return [a-c,b-d], v1=[a,b],,v2=3 return [a-3,b-3]
+    v1=checvec(v1,klen(v2))
+    v2=checvec(v2,klen(v1))
+ 
+    kres=[]
+    for i,j in zip(v1,v2):
+        kres.append(i-j)
+    return kres 
+
+def mulvec(v1,v2): # input v1=[a,b],,v2=[c,d]  return [a*c,b*d], v1=[a,b],,v2=3 return [a*3,b*3]
+    v1=checvec(v1,klen(v2))
+    v2=checvec(v2,klen(v1))
+ 
+    kres=[]
+    for i,j in zip(v1,v2):
+        kres.append(i*j)
+    return kres   
+    
+def unionvec(*args):
+    kres=[]
+    for i in args:
+        for j in i:
+            if j not in kres:
+                kres.append(j)
+    return kres 
+    
+def getindex(ksym,vec): # getindex(c,[a,b,c,d]) return 2
+    return vec.index(ksym) 
 
 #####################################
 #           list
 #####################################  
 
-
+def mulitem(ksym):
+    '''
+    input[a,b,c...]
+    return a*b*c*...
+    '''
+    kres=1
+    for i in ksym:
+        kres=kres*i
+    return kres 
+def sumitem(ksym):
+    '''
+    input[a,b,c...]
+    return a+b+c+...
+    '''
+    kres=1
+    for i in ksym:
+        kres=kres*i
+    return kres
+ 
 
 def one_ksym2ksym(ksym):  
     r'''
@@ -1320,3 +1667,51 @@ def mulexpo(ksym):
         return ares
     else:
         return ksym      
+        
+        
+#####################################
+#           GDC MCM 
+#####################################   
+
+def GCD(ee1,ee2): # returm GDC between ee1,ee2 Maximo Comun Divisor
+    b1=baselist(1*ee1)
+    b2=baselist(1*ee2)
+    e1=expolist(1*ee1)
+    e2=expolist(1*ee2)
+    kres=1
+    for v1,ve1 in zip(b1,e1):
+        for v2,ve2 in zip(b2,e2):
+            if v2==v1:
+                if Is_Number(ve1) and Is_Number(ve2):
+                    nexp=min(ve1,ve2)
+                    kres=kres*v1**nexp
+    return kres
+    
+def LCM(v1,v2): # returm GDC between ee1,ee2 Maximo Comun Divisor
+    ee1=1*v1
+    ee2=1*v2
+    b1=baselist(1*ee1)
+    b2=baselist(1*ee2)
+    e1=expolist(1*ee1)
+    e2=expolist(1*ee2)
+    bb=unionvec(b1,b2)
+    
+    kres=1
+    for i in bb:
+        ex1=0
+        ex2=0
+        ee=[]
+        if i in b1 :
+            p1=getindex(i,b1)
+            ex1=e1[p1]
+        if i in b2 :
+            p2=getindex(i,b2)
+            ex2=e2[p2]
+        if ex1!=0:
+            ee.append(ex1)
+        if ex2!=0:
+            ee.append(ex2)
+         
+        ef=min(ee)
+        kres=kres*i**ef
+    return kres    

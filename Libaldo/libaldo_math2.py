@@ -270,25 +270,11 @@ def get_inside_Pow(ksym):
     return kres
 
 #  getexponent() ***************** 
-def getexponent(ksym):  
-    '''
-        input: x**a
-        return : a  
-    '''
-    return get_expo(ksym=1*ksym)  
-    
-def get_expo(ksym):  
-    if Is_Mono(ksym):
-        mm=fpoly(ksym,'list')
-        return mm[1]
+
 
 #  getbase() ***************** 
-def getbase(ksym):  # return base from Pow monomie expresion
-    '''
-        input: x**a
-        return : x  
-    '''
-    return get_killexpo(ksym=1*ksym) 
+
+     
    
 def get_killexpo(ksym):  
     if Is_Mono(ksym):

@@ -420,12 +420,23 @@ class MyEqEq:
             p1=self.e1.get_pview()
             p2=self.e2.get_pview()
             keQ=Eq(p1,p2)    
-        if kshow:    
-            if self.name == '':
-                display(Math(latex(keQ)))
-            else:
-                sR = self.name + ')..'
-                display(Math(sR + latex(keQ)))
+        if kshow:
+            try:
+                if keQ==True:
+                    display(Math(latex(self.e1.ksym)+'='+ latex(self.e2.ksym)))
+                else:    
+                    if self.name == '':
+                        display(Math(latex(keQ)))
+                    else:
+                        sR = self.name + ')..'
+                        display(Math(sR + latex(keQ)))
+            except:
+                if self.name == '':
+                        display(Math(latex(keQ)))
+                else:
+                    sR = self.name + ')..'
+                    display(Math(sR + latex(keQ)))
+            
 
     def xcopy(self,op=''):
         kres=copy.deepcopy(self)
@@ -621,7 +632,11 @@ class MyEqEq:
          
     ################################## 
     #         simplify
-    ##################################       
+    ################################## 
+
+    
+
+    
     def expand(self, kop='RL',kshow=True):
         if 'L' in kop:
             self.e1.expand(kshow=False)
@@ -735,6 +750,9 @@ class MyEqEq:
                 self.e2.ksym=p2
                 if kshow:
                     self.s()
+        if kshow:
+            self.s()
+
             
     def expandexp(self,kop='LR',kshow=True):
         op=''
@@ -1219,8 +1237,24 @@ class MyEqEq:
             vecv.append(i)
         m1=coef_list( self.left,var2)
         m2=coef_list( self.right,var2)
+        qq1=len(m1)
+        qq2=len(m2)
+
+        if qq1<qq2:
+            qf=qq2-qq1
+            vf=mzero(qf)
+            m1=vf+m1
+        if qq2<qq1:
+            qf=qq1-qq2
+            vf=mzero(qf)
+            m2=vf+m2 
+        
+
         for i,j in zip(m1,m2):
-            vecq.append(i-j)
+            if (i-j)!=0:
+                vecq.append(i-j)
+        if len(vecq)>len( vecv):
+            vecq=vecq[0:len(vecv)]
         vecq=vecq+vecv
         kres=solver(*vecq)
         eres=[]
@@ -1765,6 +1799,24 @@ class MyEqEq:
 #  algebrate transformation
 #########################################
 
+    def transformada(self,expr0,ssym,kope='LR'):
+        if 'L' in kope:
+            p1=self.L
+            try:
+                p1=transformada(p1,expr0=expr0,ssym=ssym,kope=kope)
+            except:
+                pass
+            self.e1.ksym=p1
+        if 'R' in kope:
+            p2=self.R
+            try:
+                p2=transformada(p2,expr0=expr0,ssym=ssym,kope=kope)
+            except:
+                pass
+            self.e2.ksym=p2    
+
+        self.s()
+
     def subsnumber(self,val1,val2):
      
          
@@ -1979,4 +2031,14 @@ class MyEqEq:
         self.e2.ksym=p3*p2
         
         self.s()
-        
+
+
+
+tau,psi,omega=symbols('tau psi omega')
+varT=[tau,psi,omega] 
+
+       
+def eQtools(ee,op=0):
+    nvar=varT[op]
+    return MQ(nvar,ee)
+    

@@ -316,9 +316,9 @@ class MyEq:
     def __str__(self):
         return self.__repr__()
 
-    ###########################################
-    #               variables                    #
-    ###########################################
+###########################################
+#               variables                 #
+###########################################
 
     def norm_variable(self):
         clist = [C1, C2]
@@ -331,9 +331,9 @@ class MyEq:
                     kvar = m1[i]
 
 
-    ###########################################
-    #               Update                    #
-    ###########################################
+###########################################
+#               Update                    #
+###########################################
 
     def __add__(self, other):
         """ Returns the vector addition of self and other """
@@ -394,9 +394,9 @@ class MyEq:
         if self.varf!=[]:
             return self.primi_eq
             
-    ###########################################
-    #       show
-    ########################################   
+######################################## 
+#       show                           #
+########################################   
     
     def s2(self,op=''):
 
@@ -449,9 +449,9 @@ class MyEq:
       
 
     
-    ###########################################
-    #       set & update
-    ########################################    
+######################################## 
+#       set & update
+########################################    
     def MsetValue(self, vknom, vkval, kope=''):
         for knom, kval in zip(vknom, vkval):
             knom = unisymbols(knom)
@@ -634,21 +634,6 @@ class MyEq:
             done=False
         self.set(knom=kvar.diff(), kval=kval, kshow=kshow, kope=kope, kret=kret)
 
-    # def evalif(self, *args):
-        # vsym = []
-        # vval = []
-        # done = True
-        # for i in args:
-            # if done:
-                # vsym.append(i)
-                # done = False
-            # else:
-                # vval.append(i)
-                # done = True
-        # kres = self.ksym
-        # for i, j in zip(vsym, vval):
-            # kres = kres.subs(i, j)
-        # ee = MyEq(kres, self.name)
 
     def eval(self, **kwargs):
         kname = self.name
@@ -715,9 +700,9 @@ class MyEq:
         return self.ksym
         sR = self.name + ' ='
     
-    ###########################################
-    #            edit copy
-    ###########################################
+###########################################
+#            edit copy
+###########################################
 
     def xcopy(self, kname, kshow=True):
         ee = copy.deepcopy(self)
@@ -746,9 +731,9 @@ class MyEq:
             return self.ksym
 
 
-    ###########################################
-    #            Math operation
-    ###########################################
+###########################################
+#            Math operation
+###########################################
 
     def reduF(self, kshow=True, kupdate=True):
 
@@ -955,9 +940,19 @@ class MyEq:
         else:
             return self.ksym
             
-    ###########################################
-    #            get info
-    ###########################################
+###########################################
+#            get info
+###########################################
+     
+    def baselist(self): # if is Monomie return list of bases
+        kres=self.ksym
+        return baselist(kres)
+    
+    def expolist(self): # if is Monomie return list of exponenets
+        kres=self.ksym
+        return expolist(kres)    
+          
+    
     def get_dview(self):
         kres=self.ksym
         for i in self.vfunc:
@@ -1172,9 +1167,9 @@ class MyEq:
         kres = [self.evalue(knom, xx, kshow=False) for xx in vkval]
         return kres
 
-    ###########################################
-    #            Functions
-    ###########################################
+###########################################
+#            Functions
+###########################################
     
     @property
     def Type(self):
@@ -1270,11 +1265,29 @@ class MyEq:
         else:
             return False
 
-    ###########################################
-    #            Transformation
-    ###########################################
-     
+###########################################
+#            Transformation
+###########################################
+
+    def transformada(self,expr0,ssym,kope=''):
+        kres=self.ksym
+        try:
+            kres=transformada(kres,expr0=expr0,ssym=ssym,kope=kope)
+            self.ksym=kres
+        except:
+            pass
+        self.ksym=kres
+        self.s()
     
+    def simplifyroot(self,kshow=True):
+     
+        kres=self.ksym
+        kres=simplifyroot(kres)
+        self.ksym=kres
+        if kshow:
+            self.s()
+            
+        
     def subsnumber(self,val1,val2,kope='',kshow=True):
         kres=self.ksym
         kres=subsnumber(kres,val1,val2)
@@ -1656,9 +1669,9 @@ class MyEq:
         kvar = self.get_symbol_in_ee(svar=kname)
         return self.solve(kvar, kname=kname,korden=korden,kshow=kshow)
 
-    ###########################################
-    #            SOLVE
-    ###########################################
+###########################################
+#            SOLVE
+###########################################
 
     #   solve()
     def solve(self,*args,kshow=True,**kwargs):
@@ -1888,9 +1901,9 @@ class MyEq:
         kres1 = csolve(kres, tan(alpha))
         return kres1
 
-    ###########################################
-    #             Polinomial
-    ###########################################
+###########################################
+#             Polinomial
+###########################################
     def quotient(self,ksym,kname=''):
         
         P=self.ksym
@@ -1997,9 +2010,9 @@ class MyEq:
         return kres
         
         
-    ###########################################
-    #             Algebra
-    ########################################### 
+###########################################
+#             Algebra
+########################################### 
     def squaresum(self,p1=0,p2=0):
         kres=self.ksym
         if p1!=0:
@@ -2156,10 +2169,27 @@ class MyEq:
         '''
         ksym=self.ksym
         return insidepar(ksym,ssym=ssym)
+        
+        
+    def GCD(self,ee,kname='',kshow=True):
+        kres=GCD(self.ksym,ee)
+        if kname!='':
+            return MyEq(kres,kname=kname)
+        else:
+            if kshow :
+                return kres
+ 
+    def LCM(self,ee,kname='',kshow=True):
+        kres=LCM(self.ksym,ee)
+        if kname!='':
+            return MyEq(kres,kname=kname)
+        else:
+            if kshow :
+                return kres    
     
-    ###########################################
-    #             Reduccion Algoritmo
-    ###########################################
+###########################################
+#             Reduccion Algoritmo
+###########################################
     def factorize(self,ksym,kshow=True):
      
        # ee=3*x**7+2*x**3
@@ -2314,9 +2344,9 @@ class MyEq:
             self.s()
         except:
             self.s()
-    ###############################
-    #  Diff
-    ###############################
+###############################
+#  Diff
+###############################
     
     
     def diffEq(self, kname='', var2='', ktype='P', typeD=1):
@@ -2380,10 +2410,10 @@ class MyEq:
         self.s()
     
     
-    ###############################
-    #  Integral
-    #######################    
-    
+###############################
+#  Integral
+#######################    
+
     
     
     
@@ -2596,9 +2626,9 @@ class MyEq:
             return L
 
 
-    ################################################
-    ##                Diferencial                ###
-    ################################################
+################################################
+##                Diferencial                ###
+################################################
 
 
     def dsolve(self, kname='', C1='', C2=''):
@@ -3069,10 +3099,10 @@ class MyEq:
         exp = exp.replace(ss, sm)
         self.ksym = parse_expr(exp)
         self.s()
-    ################################################################################
-    #               alone
-    #################################################################################
- 
+################################################################################
+#               alone
+#################################################################################
+
     def alone(self,ksym):
         
         nname=str(ksym)
@@ -3137,7 +3167,39 @@ def pQ(mm, vv, kope=''):
 #################################################
 #   Solve Algorithm
 
-
+def solved(*args,**kwargs):
+    '''
+    solved (var,exp1,exp2,**kwargs)
+        input 
+            var : variable to find
+            exp1 : math expre or MyEq class that is  equation equal= 0
+            exp2 (optional): math expre or MyEq class  
+            if exp2 is given then the Eq to evalue is expr1 -expr2
+            kwargs : conditions to evalue, example x=1, t=0..etc
+        return
+            return a MyEq class with name str(var)
+    '''        
+    var=args[0]
+    ee=args[1]
+    if type(ee)==MyEq:
+        ee=ee.ksym
+    keq=ee    
+    if len(args)==3:
+        ee2=args[2]
+        if type(ee2)==MyEq:
+            ee2=ee2.ksym
+        keq=ee-ee2
+    if len(kwargs)>0:             
+            keq=real_subs(keq,**kwargs) 
+              
+    kres=solve(keq,var)
+    if type(kres)==list:
+        kres=kres[0]
+                
+    kname=str(var)
+    ee0=MyEq(kres,kname=kname)
+    return ee0       
+    
 def solverSys(*args, Bag=''):
     Ke = []
     Kv = []
@@ -3648,3 +3710,4 @@ def get_seudocofactor(e2,e3,var2):
         cc+=1
     return (vres,vecfvar)
             
+      
